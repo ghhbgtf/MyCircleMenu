@@ -4,12 +4,10 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.Adapter;
 
 /**
  * 1、设置icons & texts
@@ -24,10 +22,6 @@ public class CircleMenuLayout extends ViewGroup {
     private static final float RADIO_PADDING_LAYOUT = 1 / 12f;
     private float mPadding;
     private double mStartAngle = 30;
-    private String[] mItemTexts;
-    private int[] mItemImgs;
-    private int mMenuItemCount;
-    private OnMenuItemClickListener mOnMenuItemClickListener;
 
     public CircleMenuLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -35,59 +29,36 @@ public class CircleMenuLayout extends ViewGroup {
         setPadding(0, 0, 0, 0);
     }
 
-    public void setMenuItemIconsAndTexts(int[] resIds, String[] texts) {
-        // 参数检查 & 初始化mMenuItemCount
-        if (resIds == null && texts == null) {
-            throw new IllegalArgumentException("菜单项文本和图片至少设置其一");
-        } else if (resIds != null && texts != null) {
-            mMenuItemCount = Math.min(resIds.length, texts.length);
-        } else if (resIds != null) {
-            mMenuItemCount = resIds.length;
-        } else {
-            mMenuItemCount = texts.length;
+    private Adapter mAdapter;
+
+    public void setAdapter(Adapter adapter) {
+        mAdapter = adapter;
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        if (mAdapter != null) {
+            buildMenuItems();
         }
-
-        mItemImgs = resIds;
-        mItemTexts = texts;
-
-        buildMenuItems();
+        super.onAttachedToWindow();
     }
 
     private void buildMenuItems() {
-        /**
-         * 根据用户设置的参数，初始化view
-         */
-        LayoutInflater mInflater = LayoutInflater.from(getContext());
-        for (int i = 0; i < mMenuItemCount; i++) {
-            final int j = i;
-            View menuItem = mInflater.inflate(R.layout.circle_menu_item, this, false);
-            ImageView iv = (ImageView) menuItem.findViewById(R.id.id_circle_menu_item_image);
-            TextView tv = (TextView) menuItem.findViewById(R.id.id_circle_menu_item_text);
-
-            if (iv != null) {
-                iv.setVisibility(View.VISIBLE);
-                iv.setImageResource(mItemImgs[i]);
-                iv.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mOnMenuItemClickListener != null) {
-                            mOnMenuItemClickListener.itemClick(v, j);
-                        }
+        for (int i = 0; i < mAdapter.getCount(); i++) {
+            View itemView = mAdapter.getView(i, null, this);
+            final int finalI = i;
+            itemView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mOnMenuItemClickListener != null) {
+                        mOnMenuItemClickListener.itemClick(v, finalI);
                     }
-                });
-            }
-            if (tv != null) {
-                tv.setVisibility(View.VISIBLE);
-                tv.setText(mItemTexts[i]);
-            }
+                }
+            });
 
             // 添加view到容器中
-            addView(menuItem);
+            addView(itemView);
         }
-    }
-
-    public void setOnMenuItemClickListener(OnMenuItemClickListener listener) {
-        mOnMenuItemClickListener = listener;
     }
 
     @Override
@@ -178,7 +149,7 @@ public class CircleMenuLayout extends ViewGroup {
         // 根据menu item的个数，计算单个item的角度
         // 如果childCount == mItemImgs.length说明menu中间没有centerMenu
         float angleDelay;
-        if (childCount == mItemImgs.length) {
+        if (childCount == mAdapter.getCount()) {
             angleDelay = 360 / childCount;
         } else {
             angleDelay = 360 / (childCount - 1);
@@ -233,10 +204,17 @@ public class CircleMenuLayout extends ViewGroup {
         }
     }
 
+    private OnMenuItemClickListener mOnMenuItemClickListener;
+
     public interface OnMenuItemClickListener {
         void itemClick(View view, int pos);
 
         void itemCenterClick(View view);
     }
+
+    public void setOnMenuItemClickListener(OnMenuItemClickListener listener) {
+        mOnMenuItemClickListener = listener;
+    }
+
 
 }
