@@ -1,4 +1,4 @@
-package com.atlas.mycirclemenu;
+package com.atlas.mycirclemenu.diyview;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Adapter;
+
+import com.atlas.mycirclemenu.R;
 
 /**
  * 1、设置icons & texts

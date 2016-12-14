@@ -1,4 +1,4 @@
-package com.atlas.mycirclemenu;
+package com.atlas.mycirclemenu.defaultAdapter;
 
 /**
  * Created by Atlas on 2016/12/14.
