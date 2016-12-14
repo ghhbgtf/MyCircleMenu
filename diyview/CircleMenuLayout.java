@@ -3,7 +3,6 @@ package com.atlas.mycirclemenu.diyview;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -169,7 +168,6 @@ public class CircleMenuLayout extends ViewGroup {
             }
 
             if (child.getId() == R.id.id_circle_menu_item_center) {
-                Log.d(TAG, "layout child: id_circle_menu_item_center");
                 // 设置center item位置
                 int cl = layoutDiameter / 2 - child.getMeasuredWidth() / 2;
                 int cr = cl + child.getMeasuredWidth();
@@ -190,7 +188,6 @@ public class CircleMenuLayout extends ViewGroup {
                     + (int) Math.round(distanceFromCenter * Math.sin(Math.toRadians(mStartAngle)) - 1 / 2f * childWidth);
 
             child.layout(left, top, left + childWidth, top + childWidth);
-            Log.d(TAG, "layout child: " + left + "  " + top + "  " + (left + childWidth) + "  " + (top + childWidth));
             // 叠加角度
             mStartAngle += angleDelay;
         }
@@ -221,9 +218,8 @@ public class CircleMenuLayout extends ViewGroup {
         mOnMenuItemClickListener = listener;
     }
 
-    //记录上次onTouch事件的位置
-    private float mLastX;
-    private float mLastY;
+    //mLastAngle记录上次onTouch事件的角度
+    private float mLastAngle;
     //mMoveAngel记录从ACTION_DOWN到ACTION_UP移动的角度
     private float mMoveAngel = 0;
 
@@ -233,20 +229,17 @@ public class CircleMenuLayout extends ViewGroup {
         float y = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mLastX = x;
-                mLastY = y;
+                mLastAngle = getAngle(x, y);
                 mMoveAngel = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
-                float lastAngle = getAngle(mLastX, mLastY);
                 float newAngle = getAngle(x, y);
                 //mStartAngle表示onLayout时的起始角度
-                mStartAngle += newAngle - lastAngle;
-                mMoveAngel += newAngle - lastAngle;
+                mStartAngle += newAngle - mLastAngle;
+                mMoveAngel += newAngle - mLastAngle;
                 //请求重新布局
                 requestLayout();
-                mLastX = x;
-                mLastY = y;
+                mLastAngle = newAngle;
                 break;
             case MotionEvent.ACTION_UP:
                 //如果移动角度超过3度，那么return此次onTouch事件
