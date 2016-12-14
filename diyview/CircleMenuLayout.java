@@ -42,12 +42,12 @@ public class CircleMenuLayout extends ViewGroup {
     @Override
     protected void onAttachedToWindow() {
         if (mAdapter != null) {
-            buildMenuItems();
+            addMenuItems();
         }
         super.onAttachedToWindow();
     }
 
-    private void buildMenuItems() {
+    private void addMenuItems() {
         for (int i = 0; i < mAdapter.getCount(); i++) {
             View itemView = mAdapter.getView(i, null, this);
             final int finalI = i;
@@ -192,15 +192,13 @@ public class CircleMenuLayout extends ViewGroup {
             mStartAngle += angleDelay;
         }
 
-        // 找到中心的view，如果存在设置onclick事件
+        // 找到中心的view，设置onclick事件
         View centerItem = findViewById(R.id.id_circle_menu_item_center);
-        if (centerItem != null) {
+        if (centerItem != null && mOnMenuItemClickListener != null) {
             centerItem.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mOnMenuItemClickListener != null) {
-                        mOnMenuItemClickListener.itemCenterClick(v);
-                    }
+                    mOnMenuItemClickListener.itemCenterClick(v);
                 }
             });
         }
@@ -234,7 +232,7 @@ public class CircleMenuLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_MOVE:
                 float newAngle = getAngle(x, y);
-                //mStartAngle表示onLayout时的起始角度
+                //mStartAngle表示首次onLayout的角度
                 mStartAngle += newAngle - mLastAngle;
                 mMoveAngel += newAngle - mLastAngle;
                 //请求重新布局
