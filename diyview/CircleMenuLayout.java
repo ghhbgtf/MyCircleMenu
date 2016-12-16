@@ -271,4 +271,12 @@ public class CircleMenuLayout extends ViewGroup {
             return x < 0 ? 3 : 4;
         }
     }
+
+    public double getStartAngle() {
+        return mStartAngle;
+    }
+
+    public void setStartAngle(double startAngle) {
+        mStartAngle = startAngle;
+    }
 }

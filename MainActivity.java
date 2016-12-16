@@ -1,8 +1,12 @@
 package com.atlas.mycirclemenu;
 
+import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.LayoutAnimationController;
 import android.widget.Toast;
 
 import com.atlas.mycirclemenu.defaultAdapter.CircleMenuAdapter;
@@ -34,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getBaseContext(), "you can do something just like ccb  ", Toast.LENGTH_SHORT).show();
             }
         });
+        //添加布局动画效果
+        AlphaAnimation animation = new AlphaAnimation(0, 1);
+        animation.setDuration(200);
+        LayoutAnimationController controller = new LayoutAnimationController(animation, 1.1f);
+        controller.setOrder(LayoutAnimationController.ORDER_NORMAL);
+        mCircleMenuLayout.setLayoutAnimation(controller);
     }
 
     private void initData() {
@@ -49,4 +59,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //添加模拟抽奖功能
+    public void try_it(View view) {
+        float startAngle = (float) mCircleMenuLayout.getStartAngle();
+        ValueAnimator animator
+                = ValueAnimator.ofFloat(startAngle, startAngle + 360 * 2 + (int) (Math.random() * 10) * 60);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.setDuration(5000);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float result = (float) animation.getAnimatedValue();
+                mCircleMenuLayout.setStartAngle(result);
+                mCircleMenuLayout.requestLayout();
+            }
+        });
+        animator.start();
+    }
 }
