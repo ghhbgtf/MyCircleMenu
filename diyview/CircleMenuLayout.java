@@ -225,6 +225,9 @@ public class CircleMenuLayout extends ViewGroup {
     public boolean dispatchTouchEvent(MotionEvent event) {
         float x = event.getX();
         float y = event.getY();
+        if (isInCenter(x, y)) {
+            return super.dispatchTouchEvent(event);
+        }
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mLastAngle = getAngle(x, y);
@@ -278,5 +281,12 @@ public class CircleMenuLayout extends ViewGroup {
 
     public void setStartAngle(double startAngle) {
         mStartAngle = startAngle;
+    }
+
+    private boolean isInCenter(float eventX, float eventY) {
+        float centerRadius = mDiameter * RADIO_DEFAULT_CENTER_ITEM_DIMENSION / 2;
+        float x = eventX - mDiameter / 2;
+        float y = eventY - mDiameter / 2;
+        return Math.hypot(x, y) < centerRadius;
     }
 }

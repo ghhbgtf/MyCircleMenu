@@ -35,7 +35,9 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void itemCenterClick(View view) {
-                Toast.makeText(getBaseContext(), "you can do something just like ccb  ", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getBaseContext(), "归位", Toast.LENGTH_SHORT).show();
+                mCircleMenuLayout.setStartAngle(30);
+                mCircleMenuLayout.requestLayout();
             }
         });
         //添加布局动画效果
