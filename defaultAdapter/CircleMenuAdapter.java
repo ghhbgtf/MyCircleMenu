@@ -1,5 +1,6 @@
 package com.atlas.mycirclemenu.defaultAdapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import java.util.List;
  */
 
 public class CircleMenuAdapter extends BaseAdapter {
+    private static final String TAG = "CircleMenuAdapter";
     private List<MenuItem> mMenuItems;
 
     public CircleMenuAdapter(List<MenuItem> menuItems) {
@@ -39,17 +41,36 @@ public class CircleMenuAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater mInflater = LayoutInflater.from(parent.getContext());
-        View itemView = mInflater.inflate(R.layout.circle_menu_item, parent, false);
-        ImageView iv = (ImageView) itemView.findViewById(R.id.id_circle_menu_item_image);
-        TextView tv = (TextView) itemView.findViewById(R.id.id_circle_menu_item_text);
+        Log.d(TAG, "getView: " + position + " " + convertView);
+        ViewHolder holder;
+        if (convertView == null) {
+            holder = new ViewHolder(parent);
+            convertView = holder.root;
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
+        }
+        holder.fillData(mMenuItems.get(position));
+        return convertView;
+    }
 
-        MenuItem item = mMenuItems.get(position);
-        iv.setVisibility(View.VISIBLE);
-        iv.setImageResource(item.imgId);
-        tv.setVisibility(View.VISIBLE);
-        tv.setText(item.title);
+    private static class ViewHolder {
+        View root;
+        ImageView img;
+        TextView text;
 
-        return itemView;
+        ViewHolder(ViewGroup parent) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            root = inflater.inflate(R.layout.circle_menu_item, parent, false);
+            img = (ImageView) root.findViewById(R.id.id_circle_menu_item_image);
+            text = (TextView) root.findViewById(R.id.id_circle_menu_item_text);
+        }
+
+        void fillData(MenuItem item) {
+            img.setVisibility(View.VISIBLE);
+            img.setImageResource(item.imgId);
+            text.setVisibility(View.VISIBLE);
+            text.setText(item.title);
+        }
     }
 }

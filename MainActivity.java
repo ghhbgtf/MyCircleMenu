@@ -49,12 +49,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        String[] texts = new String[]{"安全中心1 ", "特色服务2", "投资理财3",
-                "转账汇款4", "我的账户5", "信用卡6"};
-        int[] imgs = new int[]{R.drawable.home_mbank_1_normal,
-                R.drawable.home_mbank_2_normal, R.drawable.home_mbank_3_normal,
-                R.drawable.home_mbank_4_normal, R.drawable.home_mbank_5_normal,
-                R.drawable.home_mbank_6_normal};
+        String[] texts = new String[]{
+                "安全中心1",
+                "特色服务2",
+                "投资理财3",
+                "转账汇款4",
+                "我的账户5",
+                "信用卡6"};
+        int[] imgs = new int[]{
+                R.drawable.home_mbank_1,
+                R.drawable.home_mbank_2,
+                R.drawable.home_mbank_3,
+                R.drawable.home_mbank_4,
+                R.drawable.home_mbank_5,
+                R.drawable.home_mbank_6
+        };
         for (int i = 0; i < imgs.length; i++) {
             MenuItem item = new MenuItem(imgs[i], texts[i]);
             mList.add(item);

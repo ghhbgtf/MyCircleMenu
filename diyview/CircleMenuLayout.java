@@ -25,7 +25,7 @@ public class CircleMenuLayout extends ViewGroup {
     private float RADIO_DEFAULT_CENTER_ITEM_DIMENSION = 1 / 3f;
     private static final float RADIO_PADDING_LAYOUT = 1 / 12f;
     private float mPadding;
-    private double mStartAngle = 30;
+    private double mStartAngle = 0;
 
     public CircleMenuLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
