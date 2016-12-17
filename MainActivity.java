@@ -1,5 +1,7 @@
 package com.atlas.mycirclemenu;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     private CircleMenuLayout mCircleMenuLayout;
     private ArrayList<MenuItem> mList = new ArrayList<>();
+    private boolean haveTryed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +38,24 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void itemCenterClick(View view) {
-                Toast.makeText(getBaseContext(), "归位", Toast.LENGTH_SHORT).show();
-                mCircleMenuLayout.setStartAngle(30);
-                mCircleMenuLayout.requestLayout();
+                if (!haveTryed) {
+                    //顺时针旋转2圈+60*N度（N为随机数）
+                    view.setVisibility(View.INVISIBLE);
+                    view.setClickable(false);
+                    float startAngle = (float) mCircleMenuLayout.getStartAngle();
+                    float endAngle = startAngle + 360 * 2 + (int) (Math.random() * 10) * 60;
+                    rotate(view, startAngle, endAngle);
+                } else {
+                    //选择最近的角度归位（小于180度的方向）
+                    Toast.makeText(getBaseContext(), "归位", Toast.LENGTH_SHORT).show();
+                    float startAngle = (float) mCircleMenuLayout.getStartAngle();
+                    float endAngle = startAngle + 360 - startAngle % 360;
+                    if (endAngle - startAngle > 180) {
+                        endAngle -= 360;
+                    }
+                    rotate(view, startAngle, endAngle);
+                }
+                haveTryed = !haveTryed;
             }
         });
         //添加布局动画效果
@@ -71,18 +89,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //添加模拟抽奖功能
-    public void try_it(View view) {
-        float startAngle = (float) mCircleMenuLayout.getStartAngle();
+    public void rotate(final View view, float start, float end) {
         ValueAnimator animator
-                = ValueAnimator.ofFloat(startAngle, startAngle + 360 * 2 + (int) (Math.random() * 10) * 60);
+                = ValueAnimator.ofFloat(start, end);
         animator.setInterpolator(new DecelerateInterpolator());
-        animator.setDuration(5000);
+        //速度固定为5秒3圈，根据旋转的角度计算持续时间
+        animator.setDuration((long) (5000 * Math.abs(end - start) / (360 * 3)));
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float result = (float) animation.getAnimatedValue();
                 mCircleMenuLayout.setStartAngle(result);
                 mCircleMenuLayout.requestLayout();
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                view.setVisibility(View.VISIBLE);
+                super.onAnimationEnd(animation);
             }
         });
         animator.start();
