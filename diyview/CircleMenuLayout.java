@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,14 +27,6 @@ public class CircleMenuLayout extends ViewGroup {
     private static final float RADIO_PADDING_LAYOUT = 1 / 12f;
     private float mPadding;
     private double mStartAngle = 0;
-    private int[] ids = new int[]{
-            R.id.id_circle_menu_item_1,
-            R.id.id_circle_menu_item_2,
-            R.id.id_circle_menu_item_3,
-            R.id.id_circle_menu_item_4,
-            R.id.id_circle_menu_item_5,
-            R.id.id_circle_menu_item_6,
-    };
     private float angleDelay;
 
     public CircleMenuLayout(Context context, AttributeSet attrs) {
@@ -61,7 +52,6 @@ public class CircleMenuLayout extends ViewGroup {
     private void addMenuItems() {
         for (int i = 0; i < mAdapter.getCount(); i++) {
             View itemView = mAdapter.getView(i, null, this);
-            itemView.setId(ids[i]);
             final int finalI = i;
             itemView.setOnClickListener(new OnClickListener() {
                 @Override
@@ -306,11 +296,9 @@ public class CircleMenuLayout extends ViewGroup {
         if (child.getId() == R.id.id_circle_menu_item_center) {
             return super.drawChild(canvas, child, drawingTime);
         }
-        float rotateAngle = (float) (90
-                + angleDelay * (child.getId() - R.id.id_circle_menu_item_1)
-                + mStartAngle);
         int px = child.getLeft() + child.getWidth() / 2;
         int py = child.getTop() + child.getHeight() / 2;
+        float rotateAngle = 90 + getAngle(px, py);
         canvas.save();
         canvas.rotate(rotateAngle, px, py);
         boolean tmp = super.drawChild(canvas, child, drawingTime);
