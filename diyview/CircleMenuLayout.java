@@ -27,7 +27,13 @@ public class CircleMenuLayout extends ViewGroup {
     private static final float RADIO_PADDING_LAYOUT = 1 / 12f;
     private float mPadding;
     private double mStartAngle = 0;
+    private Adapter mAdapter;
     private float angleDelay;
+    private OnMenuItemClickListener mOnMenuItemClickListener;
+    //mLastAngle记录上次onTouch事件的角度
+    private float mLastAngle;
+    //mMoveAngel记录从ACTION_DOWN到ACTION_UP移动的角度
+    private float mMoveAngel = 0;
 
     public CircleMenuLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -35,12 +41,13 @@ public class CircleMenuLayout extends ViewGroup {
         setPadding(0, 0, 0, 0);
     }
 
-    private Adapter mAdapter;
-
     public void setAdapter(Adapter adapter) {
         mAdapter = adapter;
     }
 
+    /**
+     * 添加子菜单
+     */
     @Override
     protected void onAttachedToWindow() {
         if (mAdapter != null) {
@@ -67,6 +74,11 @@ public class CircleMenuLayout extends ViewGroup {
         }
     }
 
+    /**
+     * 测量
+     * @param widthMeasureSpec
+     * @param heightMeasureSpec
+     */
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         measureSelf(widthMeasureSpec, heightMeasureSpec);
@@ -144,6 +156,14 @@ public class CircleMenuLayout extends ViewGroup {
         return Math.min(outMetrics.widthPixels, outMetrics.heightPixels);
     }
 
+    /**
+     * 布局
+     * @param changed
+     * @param l
+     * @param t
+     * @param r
+     * @param b
+     */
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int layoutDiameter = mDiameter;
@@ -205,8 +225,6 @@ public class CircleMenuLayout extends ViewGroup {
         }
     }
 
-    private OnMenuItemClickListener mOnMenuItemClickListener;
-
     public interface OnMenuItemClickListener {
         void itemClick(View view, int pos);
 
@@ -217,11 +235,11 @@ public class CircleMenuLayout extends ViewGroup {
         mOnMenuItemClickListener = listener;
     }
 
-    //mLastAngle记录上次onTouch事件的角度
-    private float mLastAngle;
-    //mMoveAngel记录从ACTION_DOWN到ACTION_UP移动的角度
-    private float mMoveAngel = 0;
-
+    /**
+     * touch事件实现旋转菜单的效果
+     * @param event
+     * @return
+     */
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
         float x = event.getX();
@@ -291,8 +309,20 @@ public class CircleMenuLayout extends ViewGroup {
         return Math.hypot(x, y) < centerRadius;
     }
 
+    public float getAngleDelay() {
+        return angleDelay;
+    }
+
+    /**
+     * 以相应的角度绘制childView，实现围绕中心"辐射"绘制的效果
+     * @param canvas
+     * @param child
+     * @param drawingTime
+     * @return
+     */
     @Override
     protected boolean drawChild(Canvas canvas, final View child, long drawingTime) {
+        //System.out.println("this is a test msg: " + indexOfChild(child));
         if (child.getId() == R.id.id_circle_menu_item_center) {
             return super.drawChild(canvas, child, drawingTime);
         }

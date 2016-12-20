@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.DecelerateInterpolator;
@@ -18,9 +19,10 @@ import com.atlas.mycirclemenu.diyview.CircleMenuLayout;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private CircleMenuLayout mCircleMenuLayout;
     private ArrayList<MenuItem> mList = new ArrayList<>();
-    private boolean haveTryed = false;
+    private boolean haveRotate = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,42 +30,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initData();
-        mCircleMenuLayout = (CircleMenuLayout) findViewById(R.id.menu_layout);
-        mCircleMenuLayout.setAdapter(new CircleMenuAdapter(mList));
-        mCircleMenuLayout.setOnMenuItemClickListener(new CircleMenuLayout.OnMenuItemClickListener() {
-            @Override
-            public void itemClick(View view, int pos) {
-                Toast.makeText(getBaseContext(), mList.get(pos).title, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void itemCenterClick(View view) {
-                if (!haveTryed) {
-                    //顺时针旋转2圈+60*N度（N为随机数）
-                    view.setVisibility(View.INVISIBLE);
-                    view.setClickable(false);
-                    float startAngle = (float) mCircleMenuLayout.getStartAngle();
-                    float endAngle = startAngle + 360 * 2 + (int) (Math.random() * 10) * 60;
-                    rotate(view, startAngle, endAngle);
-                } else {
-                    //选择最近的角度归位（小于180度的方向）
-                    Toast.makeText(getBaseContext(), "归位", Toast.LENGTH_SHORT).show();
-                    float startAngle = (float) mCircleMenuLayout.getStartAngle();
-                    float endAngle = startAngle + 360 - startAngle % 360;
-                    if (endAngle - startAngle > 180) {
-                        endAngle -= 360;
-                    }
-                    rotate(view, startAngle, endAngle);
-                }
-                haveTryed = !haveTryed;
-            }
-        });
-        //添加布局动画效果
-        AlphaAnimation animation = new AlphaAnimation(0, 1);
-        animation.setDuration(200);
-        LayoutAnimationController controller = new LayoutAnimationController(animation, 1.1f);
-        controller.setOrder(LayoutAnimationController.ORDER_NORMAL);
-        mCircleMenuLayout.setLayoutAnimation(controller);
+        initViews();
     }
 
     private void initData() {
@@ -88,10 +55,49 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void initViews() {
+        mCircleMenuLayout = (CircleMenuLayout) findViewById(R.id.menu_layout);
+        mCircleMenuLayout.setAdapter(new CircleMenuAdapter(mList));
+        mCircleMenuLayout.setOnMenuItemClickListener(new CircleMenuLayout.OnMenuItemClickListener() {
+            @Override
+            public void itemClick(View view, int pos) {
+                Toast.makeText(getBaseContext(), mList.get(pos).title, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void itemCenterClick(View view) {
+                if (!haveRotate) {
+                    //顺时针旋转 360 * 2 + angleDelay * N 度（N为随机数）
+                    view.setVisibility(View.INVISIBLE);
+                    view.setClickable(false);
+                    float startAngle = (float) mCircleMenuLayout.getStartAngle();
+                    // TODO: 2016/12/20 ensure whether mCircleMenuLayout.getAngleDelay() will return null
+                    float endAngle = startAngle + 360 * 2 + (int) (Math.random() * 10) * mCircleMenuLayout.getAngleDelay();
+                    rotate(view, startAngle, endAngle);
+                } else {
+                    //选择最近的角度归位（小于180度的方向）
+                    Toast.makeText(getBaseContext(), "归位", Toast.LENGTH_SHORT).show();
+                    float startAngle = (float) mCircleMenuLayout.getStartAngle();
+                    float endAngle = startAngle + 360 - startAngle % 360;
+                    if (endAngle - startAngle > 180) {
+                        endAngle -= 360;
+                    }
+                    rotate(view, startAngle, endAngle);
+                }
+                haveRotate = !haveRotate;
+            }
+        });
+        //添加布局动画效果
+        AlphaAnimation animation = new AlphaAnimation(0, 1);
+        animation.setDuration(100);
+        LayoutAnimationController controller = new LayoutAnimationController(animation, 1.1f);
+        controller.setOrder(LayoutAnimationController.ORDER_NORMAL);
+        mCircleMenuLayout.setLayoutAnimation(controller);
+    }
+
     //添加模拟抽奖功能
     public void rotate(final View view, float start, float end) {
-        ValueAnimator animator
-                = ValueAnimator.ofFloat(start, end);
+        ValueAnimator animator = ValueAnimator.ofFloat(start, end);
         animator.setInterpolator(new DecelerateInterpolator());
         //速度固定为5秒3圈，根据旋转的角度计算持续时间
         animator.setDuration((long) (5000 * Math.abs(end - start) / (360 * 3)));
