@@ -2,6 +2,7 @@ package com.atlas.mycirclemenu.diyview;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
@@ -40,6 +41,11 @@ public class CircleMenuLayout extends ViewGroup {
     private float mMoveAngel = 0;
     private Adapter mAdapter;
     private OnMenuItemClickListener mOnMenuItemClickListener;
+    //自动滑动效果的实现
+    private long mDownTime;
+    private boolean isFling = false;
+    private Runnable mRunnable;
+    private float degreePerSecond;
 
     public CircleMenuLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -241,6 +247,12 @@ public class CircleMenuLayout extends ViewGroup {
             case MotionEvent.ACTION_DOWN:
                 mLastAngle = getAngle(x, y);
                 mMoveAngel = 0;
+                mDownTime = SystemClock.currentThreadTimeMillis();
+                if (isFling) {
+                    removeCallbacks(mRunnable);
+                    isFling = false;
+                    return true;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 float newAngle = getAngle(x, y);
@@ -252,6 +264,26 @@ public class CircleMenuLayout extends ViewGroup {
                 mLastAngle = newAngle;
                 break;
             case MotionEvent.ACTION_UP:
+                //通过消息机制不断刷新界面实现滑动效果
+                degreePerSecond = mMoveAngel * 1000
+                        / (SystemClock.currentThreadTimeMillis() - mDownTime);
+                if (Math.abs(degreePerSecond) > 300 && !isFling) {
+                    post(mRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (Math.abs(degreePerSecond) < 20) {
+                                isFling = false;
+                                return;
+                            }
+                            isFling = true;
+                            mStartAngle += degreePerSecond / 80;
+                            degreePerSecond /= 1.066F;
+                            postDelayed(this, 16);
+                            requestLayout();
+                        }
+                    });
+                    return true;
+                }
                 //如果移动角度超过3度，那么不向子view分发此次touch事件
                 if (Math.abs(mMoveAngel) > 3) {
                     return true;
