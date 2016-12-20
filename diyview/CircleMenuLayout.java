@@ -21,19 +21,25 @@ import com.atlas.mycirclemenu.R;
  */
 public class CircleMenuLayout extends ViewGroup {
     private static final String TAG = "CircleMenuLayout";
+    //整体直径
     private int mDiameter;
+    //周围菜单的比例
     private static final float RADIO_DEFAULT_CHILD_DIMENSION = 1 / 4f;
+    //中间菜单的比例
     private float RADIO_DEFAULT_CENTER_ITEM_DIMENSION = 1 / 3f;
+    //外围padding的比例
     private static final float RADIO_PADDING_LAYOUT = 1 / 12f;
     private float mPadding;
+    //初始角度(X轴表示0度,顺时针为正方向)
     private double mStartAngle = 0;
-    private Adapter mAdapter;
+    //单个周围菜单的角度
     private float angleDelay;
-    private OnMenuItemClickListener mOnMenuItemClickListener;
     //mLastAngle记录上次onTouch事件的角度
     private float mLastAngle;
     //mMoveAngel记录从ACTION_DOWN到ACTION_UP移动的角度
     private float mMoveAngel = 0;
+    private Adapter mAdapter;
+    private OnMenuItemClickListener mOnMenuItemClickListener;
 
     public CircleMenuLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -45,8 +51,18 @@ public class CircleMenuLayout extends ViewGroup {
         mAdapter = adapter;
     }
 
+    public interface OnMenuItemClickListener {
+        void itemClick(View view, int pos);
+
+        void itemCenterClick(View view);
+    }
+
+    public void setOnMenuItemClickListener(OnMenuItemClickListener listener) {
+        mOnMenuItemClickListener = listener;
+    }
+
     /**
-     * 添加子菜单
+     * 添加周围菜单
      */
     @Override
     protected void onAttachedToWindow() {
@@ -68,7 +84,6 @@ public class CircleMenuLayout extends ViewGroup {
                     }
                 }
             });
-
             // 添加view到容器中
             addView(itemView);
         }
@@ -76,8 +91,6 @@ public class CircleMenuLayout extends ViewGroup {
 
     /**
      * 测量
-     * @param widthMeasureSpec
-     * @param heightMeasureSpec
      */
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -126,11 +139,9 @@ public class CircleMenuLayout extends ViewGroup {
         // 迭代测量
         for (int i = 0; i < count; i++) {
             final View child = getChildAt(i);
-
             if (child.getVisibility() == GONE) {
                 continue;
             }
-
             // 计算menu item的尺寸；以及和设置好的模式，去对item进行测量
             int childMeasureSpec;
             if (child.getId() == R.id.id_circle_menu_item_center) {
@@ -158,11 +169,6 @@ public class CircleMenuLayout extends ViewGroup {
 
     /**
      * 布局
-     * @param changed
-     * @param l
-     * @param t
-     * @param r
-     * @param b
      */
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
@@ -183,24 +189,20 @@ public class CircleMenuLayout extends ViewGroup {
         // 遍历去设置menu item的位置
         for (int i = 0; i < childCount; i++) {
             final View child = getChildAt(i);
-
             if (child.getVisibility() == GONE) {
                 continue;
             }
-
             if (child.getId() == R.id.id_circle_menu_item_center) {
                 // 设置center item位置
                 int cl = layoutDiameter / 2 - child.getMeasuredWidth() / 2;
-                int cr = cl + child.getMeasuredWidth();
-                child.layout(cl, cl, cr, cr);
+                int ct = layoutDiameter / 2 - child.getMeasuredWidth() / 2;
+                child.layout(cl, ct, cl + child.getMeasuredWidth(), ct + child.getMeasuredHeight());
                 continue;
             }
 
             mStartAngle %= 360;
-
             // 计算，中心点到menu item中心的距离
             float distanceFromCenter = layoutDiameter / 2f - childWidth / 2 - mPadding;
-
             // distanceFromCenter * cos 即menu item中心点的横坐标
             left = layoutDiameter / 2
                     + (int) Math.round(distanceFromCenter * Math.cos(Math.toRadians(mStartAngle)) - 1 / 2f * childWidth);
@@ -225,20 +227,8 @@ public class CircleMenuLayout extends ViewGroup {
         }
     }
 
-    public interface OnMenuItemClickListener {
-        void itemClick(View view, int pos);
-
-        void itemCenterClick(View view);
-    }
-
-    public void setOnMenuItemClickListener(OnMenuItemClickListener listener) {
-        mOnMenuItemClickListener = listener;
-    }
-
     /**
-     * touch事件实现旋转菜单的效果
-     * @param event
-     * @return
+     * 处理touch事件实现旋转菜单的效果
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
@@ -262,8 +252,7 @@ public class CircleMenuLayout extends ViewGroup {
                 mLastAngle = newAngle;
                 break;
             case MotionEvent.ACTION_UP:
-                //如果移动角度超过3度，那么return此次onTouch事件
-                //不调用父类的dispatchTouchEvent方法，那么childView就收不到此次onTouch事件
+                //如果移动角度超过3度，那么不向子view分发此次touch事件
                 if (Math.abs(mMoveAngel) > 3) {
                     return true;
                 }
@@ -273,9 +262,17 @@ public class CircleMenuLayout extends ViewGroup {
         return super.dispatchTouchEvent(event);
     }
 
-    private float getAngle(float eventX, float eventY) {
-        float x = eventX - mDiameter / 2;
-        float y = eventY - mDiameter / 2;
+    /**
+     * according the location of a point,
+     * return it's degree base on the center of parentView
+     *
+     * @param layoutX the X pixes of the point in parentView
+     * @param layoutY the Y pixes of the point in parentView
+     * @return degree base on the center of parentView, clockwise
+     */
+    private float getAngle(float layoutX, float layoutY) {
+        float x = layoutX - mDiameter / 2;
+        float y = layoutY - mDiameter / 2;
         float degree = (float) (Math.asin(y / Math.hypot(x, y)) * 180 / Math.PI);
         int quadrant = getQuadrant(x, y);
         if (quadrant == 3) {
@@ -294,6 +291,13 @@ public class CircleMenuLayout extends ViewGroup {
         }
     }
 
+    private boolean isInCenter(float eventX, float eventY) {
+        float centerRadius = mDiameter * RADIO_DEFAULT_CENTER_ITEM_DIMENSION / 2;
+        float x = eventX - mDiameter / 2;
+        float y = eventY - mDiameter / 2;
+        return Math.hypot(x, y) < centerRadius;
+    }
+
     public double getStartAngle() {
         return mStartAngle;
     }
@@ -302,23 +306,12 @@ public class CircleMenuLayout extends ViewGroup {
         mStartAngle = startAngle;
     }
 
-    private boolean isInCenter(float eventX, float eventY) {
-        float centerRadius = mDiameter * RADIO_DEFAULT_CENTER_ITEM_DIMENSION / 2;
-        float x = eventX - mDiameter / 2;
-        float y = eventY - mDiameter / 2;
-        return Math.hypot(x, y) < centerRadius;
-    }
-
     public float getAngleDelay() {
         return angleDelay;
     }
 
     /**
      * 以相应的角度绘制childView，实现围绕中心"辐射"绘制的效果
-     * @param canvas
-     * @param child
-     * @param drawingTime
-     * @return
      */
     @Override
     protected boolean drawChild(Canvas canvas, final View child, long drawingTime) {
